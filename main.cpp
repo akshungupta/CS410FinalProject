@@ -67,16 +67,19 @@ vector<string> deletes(vector<pair<string, string>> splits){
 
 unordered_set<string> editDistance1(string word){
     string alphabet = "abcdefghijklmnopqrstuvwxyz";
+
     vector<pair<string, string>> splits = split(word);
     vector<string> deleteWords = deletes(splits);
     vector<string> transposeWords = transposes(splits);
     vector<string> replaceWords = replaces(splits, alphabet);
     vector<string> insertWords = inserts(splits, alphabet);
+
     unordered_set<string> finalSet;
     finalSet.insert(deleteWords.begin(), deleteWords.end());
     finalSet.insert(transposeWords.begin(), transposeWords.end());
     finalSet.insert(replaceWords.begin(), replaceWords.end());
     finalSet.insert(insertWords.begin(), insertWords.end());
+
     return finalSet;
 }
 
@@ -85,7 +88,10 @@ int main() {
     unordered_set<string> finalSet = editDistance1("hello");
     cout << finalSet.size() << endl;
     for (auto it: finalSet) {
-        cout << it << endl;
+        if (it.find("\n") != 0){
+            cout << it << endl;
+            cout << "WTF______________________________________________" << endl;
+        }
     }
     return 0;
 }
