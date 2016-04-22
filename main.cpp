@@ -90,7 +90,6 @@ int main() {
     for (auto it: finalSet) {
         if (it.find("\n") != 0){
             cout << it << endl;
-            cout << "WTF______________________________________________" << endl;
         }
     }
     return 0;
