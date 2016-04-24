@@ -156,12 +156,12 @@ string getCorrectWord(string word){
     if (knownEditDistance1Words.size() != 0)
         return getMaxWeightWord(knownEditDistance1Words);
     unordered_set<string> knownEditDistance2Words = knownEditDistance2(word);
-    return getMaxWeightWord(finalSet);
+    return getMaxWeightWord(knownEditDistance2Words);
 }
 
 // To execute C++, please define "int main()"
 int main() {
     train("./words.txt", "./big.txt");
-    cout << getCorrectWord("Gupta") << endl;
+    cout << getCorrectWord("hast't") << endl;
     return 0;
 }
