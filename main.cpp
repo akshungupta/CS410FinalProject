@@ -20,30 +20,19 @@ void readAllWords (string allWordsFile) {
 
 void readCorpus (string corpusFile) {
     ifstream infile(corpusFile);
-    string string_to_split;
-    while (getline(infile, string_to_split)) {
-        std::regex rgx("[.,!?:; \"-]+\\s*");
-        std::sregex_token_iterator iter(string_to_split.begin(),
-                                        string_to_split.end(),
-                                        rgx,
-                                        -1);
-        std::sregex_token_iterator end;
-        for ( ; iter != end; ++iter) {
-            string data = *iter;
-            transform(data.begin(), data.end(), data.begin(), ::tolower);
-            bg_model[data]++;
-        }
+    string word;
+    while (infile >> word) {
+        bg_model[word] += 1;
     }
 }
 
 void train (string allWordsFile, string corpusFile) {
     readAllWords(allWordsFile);
     readCorpus(corpusFile);
-    cout << "BG MODEL SIZE: " << bg_model.size() << endl;
 }
 
-vector<pair<string, string>> split(string word) {
-    vector<pair<string, string>> array;
+vector<pair<string, string> > split(string word) {
+    vector<pair<string, string> > array;
     for (unsigned int i = 0; i < word.length() + 1; i++) {
         pair<string, string> currPair(word.substr(0, i), word.substr(i, word.length() - i));
         array.push_back(currPair);
@@ -51,7 +40,7 @@ vector<pair<string, string>> split(string word) {
     return array;
 }
 
-vector<string> inserts (vector <pair<string,string>> myPairs, string alphabet){
+vector<string> inserts (vector <pair<string,string> > myPairs, string alphabet){
     vector<string> insertArr;
     for (size_t i = 0; i < myPairs.size(); i++){
         for (size_t j = 0; j < alphabet.length(); j++) {
@@ -62,7 +51,7 @@ vector<string> inserts (vector <pair<string,string>> myPairs, string alphabet){
     return insertArr;
 }
 
-vector<string> replaces (vector<pair<string, string>> myPairs, string alphabet) {
+vector<string> replaces (vector<pair<string, string> > myPairs, string alphabet) {
     vector<string> replaceArr;
     for (size_t i = 0; i < myPairs.size(); i++){
         for (size_t j = 0; j < alphabet.length(); j++) {
@@ -75,7 +64,7 @@ vector<string> replaces (vector<pair<string, string>> myPairs, string alphabet) 
     return replaceArr;
 }
 
-vector<string> transposes (vector<pair<string, string>> myPairs) {
+vector<string> transposes (vector<pair<string, string> > myPairs) {
     vector<string> transposeArr;
     for (size_t i = 0; i < myPairs.size(); i++){
         if (myPairs[i].second.length() > 1) {
@@ -88,7 +77,7 @@ vector<string> transposes (vector<pair<string, string>> myPairs) {
     return transposeArr;
 }
 
-vector<string> deletes(vector<pair<string, string>> splits){
+vector<string> deletes(vector<pair<string, string> > splits){
     vector<string> deletes;
     for (auto pair : splits){
         if (pair.second != ""){
@@ -104,7 +93,7 @@ vector<string> deletes(vector<pair<string, string>> splits){
 unordered_set<string> editDistance1(string word){
     string alphabet = "abcdefghijklmnopqrstuvwxyz";
 
-    vector<pair<string, string>> splits = split(word);
+    vector<pair<string, string> > splits = split(word);
     vector<string> deleteWords = deletes(splits);
     vector<string> transposeWords = transposes(splits);
     vector<string> replaceWords = replaces(splits, alphabet);
@@ -160,18 +149,19 @@ string getCorrectWord(string word){
     if (bg_model.find(word) != bg_model.end())
         finalSet.insert(word);
     unordered_set<string> bgModelWords = knownWords(finalSet);
+    if (bgModelWords.size() != 0)
+        return getMaxWeightWord(bgModelWords);
     unordered_set<string> editDistance1Words  = editDistance1(word);
     unordered_set<string> knownEditDistance1Words = knownWords(editDistance1Words);
+    if (knownEditDistance1Words.size() != 0)
+        return getMaxWeightWord(knownEditDistance1Words);
     unordered_set<string> knownEditDistance2Words = knownEditDistance2(word);
-    finalSet.insert(bgModelWords.begin(), bgModelWords.end());
-    finalSet.insert(knownEditDistance1Words.begin(), knownEditDistance1Words.end());
-    finalSet.insert(knownEditDistance2Words.begin(), knownEditDistance2Words.end());
     return getMaxWeightWord(finalSet);
 }
 
 // To execute C++, please define "int main()"
 int main() {
     train("./words.txt", "./big.txt");
-    cout << getCorrectWord("speling") << endl;
+    cout << getCorrectWord("actor") << endl;
     return 0;
 }
