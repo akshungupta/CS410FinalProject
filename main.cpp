@@ -159,9 +159,36 @@ string getCorrectWord(string word){
     return getMaxWeightWord(knownEditDistance2Words);
 }
 
+void correctFile (string input_filename, string output_filename) {
+    ofstream myfile;
+    myfile.open (output_filename);
+    ifstream infile(input_filename);
+
+    string word;
+    while (infile >> word) {
+        unordered_map<string, vector<string> > additonalChars;
+        int wordLen = word.length();
+        int correctStart = 0;
+        int correctEnd = wordLen-1;
+        if (word.at(0) < 65 || (word.at(0) >= 91 && word.at(0) <= 96) || word.at(0) > 122) {
+            additonalChars['first'].push_back(word.at(0));
+            correctStart = 1;
+        }
+        for (; correctEnd >= 0; correctEnd --) {
+            if (word.at(correctEnd) < 65 || (word.at(correctEnd) >= 91 && word.at(correctEnd) <= 96) || word.at(correctEnd) > 122) {
+                additonalChars['end'].push_back(word.at(correctEnd));
+            }
+        }
+        string string_to_check = word.substr(correctStart, correctEnd + 1);
+    }
+
+    myfile.close();
+}
+
 // To execute C++, please define "int main()"
 int main() {
     train("./words.txt", "./big.txt");
+    correctFile("input_test.txt", "output_test.txt");
     cout << getCorrectWord("hast't") << endl;
     return 0;
 }
