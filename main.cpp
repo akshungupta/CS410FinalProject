@@ -39,6 +39,7 @@ void readCorpus (string corpusFile) {
 void train (string allWordsFile, string corpusFile) {
     readAllWords(allWordsFile);
     readCorpus(corpusFile);
+    cout << "BG MODEL SIZE: " << bg_model.size() << endl;
 }
 
 vector<pair<string, string>> split(string word) {
