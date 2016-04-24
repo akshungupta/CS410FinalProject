@@ -1,10 +1,45 @@
 #include <iostream>
-#include <string>
 #include <vector>
-#include <utility>
 #include <unordered_map>
 #include <unordered_set>
+#include <regex>
+#include <fstream>
+
 using namespace std;
+
+
+unordered_map<string, int> bg_model;
+void readAllWords (string allWordsFile) {
+    ifstream infile(allWordsFile);
+    string word;
+
+    while (getline(infile, word)) {
+        bg_model[word]++;
+    }
+}
+
+void readCorpus (string corpusFile) {
+    ifstream infile(corpusFile);
+    string string_to_split;
+    while (getline(infile, string_to_split)) {
+        std::regex rgx("[.,!?:; \"-]+\\s*");
+        std::sregex_token_iterator iter(string_to_split.begin(),
+                                        string_to_split.end(),
+                                        rgx,
+                                        -1);
+        std::sregex_token_iterator end;
+        for ( ; iter != end; ++iter) {
+            string data = *iter;
+            transform(data.begin(), data.end(), data.begin(), ::tolower);
+            bg_model[data]++;
+        }
+    }
+}
+
+void train (string allWordsFile, string corpusFile) {
+    readAllWords(allWordsFile);
+    readCorpus(corpusFile);
+}
 
 vector<pair<string, string>> split(string word) {
     vector<pair<string, string>> array;
@@ -83,14 +118,59 @@ unordered_set<string> editDistance1(string word){
     return finalSet;
 }
 
-// To execute C++, please define "int main()"
-int main() {
-    unordered_set<string> finalSet = editDistance1("hello");
-    cout << finalSet.size() << endl;
-    for (auto it: finalSet) {
-        if (it.find("\n") != 0){
-            cout << it << endl;
+unordered_set<string> knownEditDistance2(string word){
+    unordered_set<string> distanceOneWords = editDistance1(word);
+    unordered_set<string> retSet;
+    for (auto currWord : distanceOneWords){
+        unordered_set<string> distanceTwoWords = editDistance1(currWord);
+        for (auto twoWord : distanceTwoWords){
+            if (bg_model.find(twoWord) != bg_model.end()){
+                retSet.insert(twoWord);
+            }
         }
     }
+    return retSet;
+}
+
+unordered_set<string> knownWords(unordered_set<string> words){
+    unordered_set<string> retSet;
+    for (auto currWord : words){
+        if (bg_model.find(currWord) != bg_model.end()){
+            retSet.insert(currWord);
+        }
+    }
+    return retSet;
+}
+
+string getMaxWeightWord(unordered_set<string> words){
+    int maxWeight = -1;
+    string wordWithMaxWeight;
+    for (auto currWord : words){
+        if (bg_model[currWord] > maxWeight){
+            maxWeight = bg_model[currWord];
+            wordWithMaxWeight = currWord;
+        }
+    }
+    return wordWithMaxWeight;
+}
+
+string getCorrectWord(string word){
+    unordered_set<string> finalSet;
+    if (bg_model.find(word) != bg_model.end())
+        finalSet.insert(word);
+    unordered_set<string> bgModelWords = knownWords(finalSet);
+    unordered_set<string> editDistance1Words  = editDistance1(word);
+    unordered_set<string> knownEditDistance1Words = knownWords(editDistance1Words);
+    unordered_set<string> knownEditDistance2Words = knownEditDistance2(word);
+    finalSet.insert(bgModelWords.begin(), bgModelWords.end());
+    finalSet.insert(knownEditDistance1Words.begin(), knownEditDistance1Words.end());
+    finalSet.insert(knownEditDistance2Words.begin(), knownEditDistance2Words.end());
+    return getMaxWeightWord(finalSet);
+}
+
+// To execute C++, please define "int main()"
+int main() {
+    train("./words.txt", "./big.txt");
+    cout << getCorrectWord("speling") << endl;
     return 0;
 }
