@@ -162,6 +162,6 @@ string getCorrectWord(string word){
 // To execute C++, please define "int main()"
 int main() {
     train("./words.txt", "./big.txt");
-    cout << getCorrectWord("actor") << endl;
+    cout << getCorrectWord("Gupta") << endl;
     return 0;
 }
