@@ -4,6 +4,8 @@
 #include <unordered_set>
 #include <regex>
 #include <fstream>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -164,31 +166,68 @@ void correctFile (string input_filename, string output_filename) {
     myfile.open (output_filename);
     ifstream infile(input_filename);
 
-    string word;
-    while (infile >> word) {
-        unordered_map<string, vector<string> > additonalChars;
-        int wordLen = word.length();
-        int correctStart = 0;
-        int correctEnd = wordLen-1;
-        if (word.at(0) < 65 || (word.at(0) >= 91 && word.at(0) <= 96) || word.at(0) > 122) {
-            additonalChars['first'].push_back(word.at(0));
-            correctStart = 1;
+    string line = "";
+    while (getline(infile, line)) {
+
+        istringstream iss(line);
+        string word;
+        string result_string = "";        
+
+        if (line.empty()) {
+            myfile << "\n";
+            continue;
         }
-        for (; correctEnd >= 0; correctEnd --) {
-            if (word.at(correctEnd) < 65 || (word.at(correctEnd) >= 91 && word.at(correctEnd) <= 96) || word.at(correctEnd) > 122) {
-                additonalChars['end'].push_back(word.at(correctEnd));
+
+        while (iss >> word) {
+            unordered_map<string, vector<char> > additionalChars;
+
+            int wordLen = word.length();
+            int correctStart = 0;
+            int correctEnd = wordLen-1;
+            bool isCapitalized = false;
+
+            if (word.at(0) < 65 || (word.at(0) >= 91 && word.at(0) <= 96) || word.at(0) > 122) {
+                result_string += word.at(0);
+                correctStart = 1;
             }
+
+            if (word[correctStart] > 64 && word[correctStart] < 91) {
+                isCapitalized = true;
+                word[correctStart] = tolower(word[correctStart]);
+            }
+
+
+            while (word.at(correctEnd) < 65 || (word.at(correctEnd) > 90 && word.at(correctEnd) <= 96) || word.at(correctEnd) > 122) {
+                additionalChars["end"].push_back(word.at(correctEnd));
+                correctEnd--;    
+            }
+
+            string string_to_check = word.substr(correctStart, correctEnd + 1);
+            string correct_word = getCorrectWord(string_to_check);
+
+            if (isCapitalized) {
+                correct_word[0] = toupper(correct_word[0]);
+            }
+
+            result_string += correct_word;
+
+            for (int i = additionalChars["end"].size()-1; i >= 0; i--) {
+                result_string += additionalChars["end"][i];
+            }
+
+            result_string += " ";
         }
-        string string_to_check = word.substr(correctStart, correctEnd + 1);
+
+        result_string[result_string.length()-1] = '\n';
+        myfile << result_string;
     }
 
     myfile.close();
 }
 
-// To execute C++, please define "int main()"
+// to execute C++, please define "int main()"
 int main() {
     train("./words.txt", "./big.txt");
     correctFile("input_test.txt", "output_test.txt");
-    cout << getCorrectWord("hast't") << endl;
     return 0;
 }
